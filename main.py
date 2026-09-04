@@ -99,11 +99,17 @@ class MainWindow(QMainWindow):
         self.dir_label.setStyleSheet("color: #AAA;")
         cap_layout.addWidget(self.dir_label)
 
-        self.snap_btn = QPushButton("Snap Snapshot")
+        # Freeze / Unfreeze
+        self.snap_btn = QPushButton("Snap Frame")
         self.snap_btn.setFixedHeight(40)
         self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
-        self.snap_btn.clicked.connect(self.save_snapshot)
+        self.snap_btn.clicked.connect(self.toggle_snap)
         cap_layout.addWidget(self.snap_btn)
+
+        # Save Image with Measurement Overlays
+        self.save_meas_btn = QPushButton("Save")
+        self.save_meas_btn.clicked.connect(self.save_image)
+        cap_layout.addWidget(self.save_meas_btn)
 
         control_panel.addWidget(cap_group)
         control_panel.addStretch()
@@ -136,7 +142,7 @@ class MainWindow(QMainWindow):
             self.video_thread.stop()
 
         self.is_frozen = False
-        self.snap_btn.setText("Snap Snapshot")
+        self.snap_btn.setText("Snap Frame")
         self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
 
         device = self.camera_selector.currentData()
@@ -164,49 +170,54 @@ class MainWindow(QMainWindow):
         folder = QFileDialog.getExistingDirectory(self, "Select Save Directory", self.save_dir)
         if folder:
             self.save_dir = folder
-            self.dir_label.setText(self.save_dir)
+            folder_name = os.path.basename(os.path.normpath(self.save_dir))
+            self.dir_label.setText(f"Output Storage: {folder_name}")
             self.settings.setValue("save_dir", self.save_dir)
 
     def load_settings(self):
         default_dir = os.path.expanduser("~/Pictures")
         self.save_dir = self.settings.value("save_dir", default_dir)
-        self.dir_label.setText(self.save_dir)
+        folder_name = os.path.basename(os.path.normpath(self.save_dir))
+        self.dir_label.setText(f"Output Storage: {folder_name}")
 
         geometry = self.settings.value("geometry")
         if geometry:
             self.restoreGeometry(geometry)
 
-    def save_snapshot(self):
+    def toggle_snap(self):
         if not self.is_frozen:
-            # First click: Capture and Freeze Frame
             if self.video_widget.current_frame is None:
-                self.status_bar.showMessage("Error: No frame available to capture.", 3000)
+                self.status_bar.showMessage("Error: No frame available to snap.", 3000)
                 return
 
-            os.makedirs(self.save_dir, exist_ok=True)
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filepath = os.path.join(self.save_dir, f"microscope_{timestamp}.png")
-
-            cv2.imwrite(filepath, self.video_widget.current_frame)
-
-            # Freeze screen by disconnecting signal
             if self.video_thread is not None:
                 self.video_thread.frame_signal.disconnect(self.video_widget.set_frame)
 
             self.is_frozen = True
             self.snap_btn.setText("Resume Live View")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px; background-color: #d9534f; color: white;")
-            self.status_bar.showMessage(f"Frozen & Saved: {filepath}", 5000)
-
+            self.status_bar.showMessage("Frame frozen", 3000)
         else:
-            # Second click: Unfreeze / Resume Stream
             if self.video_thread is not None:
                 self.video_thread.frame_signal.connect(self.video_widget.set_frame)
 
             self.is_frozen = False
-            self.snap_btn.setText("Snap Snapshot")
+            self.snap_btn.setText("Snap Frame")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
             self.status_bar.showMessage("Resumed live feed", 3000)
+
+    def save_image(self):
+        pixmap = self.video_widget.grab()
+        if pixmap.isNull():
+            self.status_bar.showMessage("Error: Failed to capture widget pixmap.", 3000)
+            return
+
+        os.makedirs(self.save_dir, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filepath = os.path.join(self.save_dir, f"microscope_meas_{timestamp}.png")
+
+        pixmap.save(filepath, "PNG")
+        self.status_bar.showMessage(f"Saved annotated image: {filepath}", 5000)
 
     def closeEvent(self, event):
         self.settings.setValue("geometry", self.saveGeometry())
