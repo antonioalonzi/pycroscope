@@ -6,14 +6,16 @@ from datetime import datetime
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QPushButton,
     QComboBox, QDoubleSpinBox, QFileDialog, QHBoxLayout,
-    QVBoxLayout, QFormLayout, QGroupBox, QStatusBar, QInputDialog,
-    QButtonGroup, QRadioButton
+    QVBoxLayout, QFormLayout, QGroupBox, QStatusBar, QButtonGroup, QRadioButton
 )
 
 from camera import VideoThread
 from settings import AppSettings
 from utils import calculate_scale
 from widgets import VideoWidget
+
+
+STATUS_BAR_MESSAGE_DURATION = 3000
 
 
 class MainWindow(QMainWindow):
@@ -150,6 +152,7 @@ class MainWindow(QMainWindow):
 
         # Save Image with Measurement Overlays
         self.save_meas_btn = QPushButton("Save")
+        self.save_meas_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
         self.save_meas_btn.clicked.connect(self.save_image)
         cap_layout.addWidget(self.save_meas_btn)
 
@@ -192,7 +195,7 @@ class MainWindow(QMainWindow):
             self.video_thread = VideoThread(device_path=device)
             self.video_thread.frame_signal.connect(self.video_widget.set_frame)
             self.video_thread.start()
-            self.status_bar.showMessage(f"Connected to device: {device}")
+            self.status_bar.showMessage(f"Connected to device: {device}", STATUS_BAR_MESSAGE_DURATION)
 
     def change_camera(self):
         self.start_camera()
@@ -200,7 +203,7 @@ class MainWindow(QMainWindow):
     def change_measurement_mode(self, mode_name):
         mode = mode_name.lower()
         self.video_widget.set_measurement_mode(mode)
-        self.status_bar.showMessage(f"Measurement mode: {mode_name}", 2000)
+        self.status_bar.showMessage(f"Measurement mode: {mode_name}", STATUS_BAR_MESSAGE_DURATION)
 
     def update_scale(self):
         scale = calculate_scale(
@@ -222,49 +225,42 @@ class MainWindow(QMainWindow):
     def toggle_snap(self):
         if not self.is_frozen:
             if self.video_widget.current_frame is None:
-                self.status_bar.showMessage("Error: No frame available to snap.", 3000)
+                self.status_bar.showMessage("Error: No frame available to snap.", STATUS_BAR_MESSAGE_DURATION)
                 return
 
             if self.video_thread is not None:
                 self.video_thread.frame_signal.disconnect(self.video_widget.set_frame)
 
-            self.video_widget.set_measurement_enabled(True)
             self.is_frozen = True
-            self.clear_btn.setEnabled(True)
-            self.delete_last_btn.setEnabled(True)
-            self.radio_dist.setEnabled(True)
-            self.radio_angle.setEnabled(True)
-            self.radio_text.setEnabled(True)
             self.snap_btn.setText("Resume Live View")
-            self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px; background-color: #d9534f; color: white;")
-            self.status_bar.showMessage("Frame frozen", 3000)
+            self.status_bar.showMessage("Frame frozen", STATUS_BAR_MESSAGE_DURATION)
         else:
             if self.video_thread is not None:
                 self.video_thread.frame_signal.connect(self.video_widget.set_frame)
 
-            self.video_widget.set_measurement_enabled(False)
             self.is_frozen = False
-            self.clear_btn.setEnabled(False)
-            self.delete_last_btn.setEnabled(False)
-            self.radio_dist.setEnabled(False)
-            self.radio_angle.setEnabled(False)
-            self.radio_text.setEnabled(False)
             self.snap_btn.setText("Snap Frame")
-            self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
-            self.status_bar.showMessage("Resumed live feed", 3000)
+            self.status_bar.showMessage("Resumed live feed", STATUS_BAR_MESSAGE_DURATION)
+
+        self.video_widget.set_measurement_enabled(self.is_frozen)
+        self.clear_btn.setEnabled(self.is_frozen)
+        self.delete_last_btn.setEnabled(self.is_frozen)
+        self.radio_dist.setEnabled(self.is_frozen)
+        self.radio_angle.setEnabled(self.is_frozen)
+        self.radio_text.setEnabled(self.is_frozen)
 
     def save_image(self):
         pixmap = self.video_widget.grab()
         if pixmap.isNull():
-            self.status_bar.showMessage("Error: Failed to capture widget pixmap.", 3000)
+            self.status_bar.showMessage("Error: Failed to capture widget pixmap.", STATUS_BAR_MESSAGE_DURATION)
             return
 
         os.makedirs(self.settings.save_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filepath = os.path.join(self.settings.save_dir, f"microscope_meas_{timestamp}.png")
+        filepath = os.path.join(self.settings.save_dir, f"microscope_{timestamp}.png")
 
         pixmap.save(filepath, "PNG")
-        self.status_bar.showMessage(f"Saved annotated image: {filepath}", 5000)
+        self.status_bar.showMessage(f"Saved image: {filepath}", STATUS_BAR_MESSAGE_DURATION)
 
     def closeEvent(self, event):
         self.settings.set_geometry(self.saveGeometry())
