@@ -7,7 +7,7 @@ from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QPushButton,
     QComboBox, QDoubleSpinBox, QFileDialog, QHBoxLayout,
-    QVBoxLayout, QFormLayout, QGroupBox, QStatusBar
+    QVBoxLayout, QFormLayout, QGroupBox, QStatusBar, QButtonGroup, QRadioButton
 )
 
 from camera import VideoThread
@@ -88,6 +88,22 @@ class MainWindow(QMainWindow):
         self.snap_btn.clicked.connect(self.toggle_snap)
         meas_layout.addWidget(self.snap_btn)
 
+        mode_layout = QHBoxLayout()
+        self.meas_button_group = QButtonGroup(self)
+        self.radio_dist = QRadioButton("Distance")
+        self.radio_dist.setEnabled(False)
+        self.radio_angle = QRadioButton("Angle")
+        self.radio_angle.setEnabled(False)
+        self.radio_dist.setChecked(True)
+        self.meas_button_group.addButton(self.radio_dist)
+        self.meas_button_group.addButton(self.radio_angle)
+        mode_layout.addWidget(self.radio_dist)
+        mode_layout.addWidget(self.radio_angle)
+        meas_layout.addLayout(mode_layout)
+        self.meas_button_group.buttonClicked.connect(
+            lambda btn: self.change_measurement_mode(btn.text())
+        )
+
         self.clear_btn = QPushButton("Clear All Measurements")
         self.clear_btn.clicked.connect(self.video_widget.clear_points)
         self.clear_btn.setEnabled(False)
@@ -161,6 +177,11 @@ class MainWindow(QMainWindow):
     def change_camera(self):
         self.start_camera()
 
+    def change_measurement_mode(self, mode_name):
+        mode = mode_name.lower()
+        self.video_widget.set_measurement_mode(mode)
+        self.status_bar.showMessage(f"Measurement mode: {mode_name}", 2000)
+
     def update_scale(self):
         scale = calculate_scale(
             self.pitch_spin.value(),
@@ -202,6 +223,8 @@ class MainWindow(QMainWindow):
             self.is_frozen = True
             self.clear_btn.setEnabled(True)
             self.delete_last_btn.setEnabled(True)
+            self.radio_dist.setEnabled(True)
+            self.radio_angle.setEnabled(True)
             self.snap_btn.setText("Resume Live View")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px; background-color: #d9534f; color: white;")
             self.status_bar.showMessage("Frame frozen", 3000)
@@ -213,6 +236,8 @@ class MainWindow(QMainWindow):
             self.is_frozen = False
             self.clear_btn.setEnabled(False)
             self.delete_last_btn.setEnabled(False)
+            self.radio_dist.setEnabled(False)
+            self.radio_angle.setEnabled(False)
             self.snap_btn.setText("Snap Frame")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
             self.status_bar.showMessage("Resumed live feed", 3000)
