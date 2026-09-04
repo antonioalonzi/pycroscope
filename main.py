@@ -24,6 +24,7 @@ class MainWindow(QMainWindow):
 
         self.settings = QSettings("MicroscopeLab", "VisionWorkbench")
         self.video_thread = None
+        self.is_frozen = False
 
         self.init_ui()
         self.load_settings()
@@ -134,6 +135,10 @@ class MainWindow(QMainWindow):
         if self.video_thread is not None:
             self.video_thread.stop()
 
+        self.is_frozen = False
+        self.snap_btn.setText("Snap Snapshot")
+        self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
+
         device = self.camera_selector.currentData()
         if device is not None:
             self.settings.setValue("last_device", device)
@@ -172,16 +177,36 @@ class MainWindow(QMainWindow):
             self.restoreGeometry(geometry)
 
     def save_snapshot(self):
-        if self.video_widget.current_frame is None:
-            self.status_bar.showMessage("Error: No frame available to capture.", 3000)
-            return
+        if not self.is_frozen:
+            # First click: Capture and Freeze Frame
+            if self.video_widget.current_frame is None:
+                self.status_bar.showMessage("Error: No frame available to capture.", 3000)
+                return
 
-        os.makedirs(self.save_dir, exist_ok=True)
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filepath = os.path.join(self.save_dir, f"microscope_{timestamp}.png")
+            os.makedirs(self.save_dir, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filepath = os.path.join(self.save_dir, f"microscope_{timestamp}.png")
 
-        cv2.imwrite(filepath, self.video_widget.current_frame)
-        self.status_bar.showMessage(f"Saved: {filepath}", 5000)
+            cv2.imwrite(filepath, self.video_widget.current_frame)
+
+            # Freeze screen by disconnecting signal
+            if self.video_thread is not None:
+                self.video_thread.frame_signal.disconnect(self.video_widget.set_frame)
+
+            self.is_frozen = True
+            self.snap_btn.setText("Resume Live View")
+            self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px; background-color: #d9534f; color: white;")
+            self.status_bar.showMessage(f"Frozen & Saved: {filepath}", 5000)
+
+        else:
+            # Second click: Unfreeze / Resume Stream
+            if self.video_thread is not None:
+                self.video_thread.frame_signal.connect(self.video_widget.set_frame)
+
+            self.is_frozen = False
+            self.snap_btn.setText("Snap Snapshot")
+            self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
+            self.status_bar.showMessage("Resumed live feed", 3000)
 
     def closeEvent(self, event):
         self.settings.setValue("geometry", self.saveGeometry())
