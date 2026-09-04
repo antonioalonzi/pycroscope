@@ -6,6 +6,10 @@ from PyQt6.QtWidgets import QLabel, QInputDialog
 
 from utils import calculate_distance, cv_to_qpixmap
 
+DOT_COLOR = (0, 180, 255)
+LINE_COLOR = (0, 255, 128)
+TEXT_COLOR = (0, 255, 128)
+
 
 class VideoWidget(QLabel):
     """Custom view for live rendering and interactive measurement vector overlays."""
@@ -158,26 +162,26 @@ class VideoWidget(QLabel):
         self.update_display()
 
     def _draw_distance(self, frame, p1, p2, label):
-        cv2.circle(frame, p1, 3, (0, 180, 255), -1)
-        cv2.circle(frame, p2, 3, (0, 180, 255), -1)
-        cv2.line(frame, p1, p2, (0, 255, 128), 1)
+        cv2.circle(frame, p1, 3, DOT_COLOR, -1)
+        cv2.circle(frame, p2, 3, DOT_COLOR, -1)
+        cv2.line(frame, p1, p2, LINE_COLOR, 1)
 
         mid_x = int((p1[0] + p2[0]) / 2)
         mid_y = int((p1[1] + p2[1]) / 2) - 10
         cv2.putText(frame, label, (mid_x, mid_y),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 128), 1)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, LINE_COLOR, 1)
 
     def _draw_angle(self, frame, p1, p2, p3, label):
-        cv2.circle(frame, p1, 3, (0, 180, 255), -1)
-        cv2.circle(frame, p2, 3, (0, 180, 255), -1)
-        cv2.circle(frame, p3, 3, (0, 180, 255), -1)
-        cv2.line(frame, p2, p1, (0, 255, 128), 1)
-        cv2.line(frame, p2, p3, (0, 255, 128), 1)
+        cv2.circle(frame, p1, 3, DOT_COLOR, -1)
+        cv2.circle(frame, p2, 3, DOT_COLOR, -1)
+        cv2.circle(frame, p3, 3, DOT_COLOR, -1)
+        cv2.line(frame, p2, p1, LINE_COLOR, 1)
+        cv2.line(frame, p2, p3, LINE_COLOR, 1)
 
         label_x = int((p1[0] + p2[0] + p3[0]) / 3)
         label_y = int((p1[1] + p2[1] + p3[1]) / 3) - 12
         cv2.putText(frame, label, (label_x, label_y),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 128), 1)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, LINE_COLOR, 1)
 
     def update_display(self):
         if self.current_frame is None:
@@ -187,11 +191,11 @@ class VideoWidget(QLabel):
 
         if self.pending_text is not None:
             cv2.putText(frame, f"Text: {self.pending_text}", (12, 26),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1, cv2.LINE_AA)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, TEXT_COLOR, 1, cv2.LINE_AA)
 
         for point in self.pending_points:
             p = (int(point[0]), int(point[1]))
-            cv2.circle(frame, p, 3, (0, 180, 255), -1)
+            cv2.circle(frame, p, 3, DOT_COLOR, -1)
 
         for measurement in self.measurements:
             points = [(int(pt[0]), int(pt[1])) for pt in measurement["points"]]
@@ -216,7 +220,7 @@ class VideoWidget(QLabel):
 
         for annotation in self.text_annotations:
             cv2.putText(frame, annotation["text"], (int(annotation["x"]), int(annotation["y"])),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, TEXT_COLOR, 1, cv2.LINE_AA)
 
         pixmap = cv_to_qpixmap(frame)
         self.setPixmap(pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio,
