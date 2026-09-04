@@ -7,7 +7,8 @@ from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QPushButton,
     QComboBox, QDoubleSpinBox, QFileDialog, QHBoxLayout,
-    QVBoxLayout, QFormLayout, QGroupBox, QStatusBar, QButtonGroup, QRadioButton
+    QVBoxLayout, QFormLayout, QGroupBox, QStatusBar, QInputDialog,
+    QButtonGroup, QRadioButton
 )
 
 from camera import VideoThread
@@ -104,15 +105,25 @@ class MainWindow(QMainWindow):
             lambda btn: self.change_measurement_mode(btn.text())
         )
 
-        self.clear_btn = QPushButton("Clear All Measurements")
+        self.add_text_btn = QPushButton("Add Text")
+        self.add_text_btn.clicked.connect(self.add_text_annotation)
+        self.add_text_btn.setEnabled(False)
+        meas_layout.addWidget(self.add_text_btn)
+
+        action_row = QHBoxLayout()
+        self.clear_btn = QPushButton("Clear All")
         self.clear_btn.clicked.connect(self.video_widget.clear_points)
         self.clear_btn.setEnabled(False)
-        meas_layout.addWidget(self.clear_btn)
+        self.clear_btn.setMinimumWidth(120)
+        action_row.addWidget(self.clear_btn, 1)
+        action_row.addSpacing(8)
 
-        self.delete_last_btn = QPushButton("Delete Last Measurement")
-        self.delete_last_btn.clicked.connect(self.video_widget.delete_last_measurement)
+        self.delete_last_btn = QPushButton("Clear Last")
+        self.delete_last_btn.clicked.connect(self.video_widget.clear_last_edit)
         self.delete_last_btn.setEnabled(False)
-        meas_layout.addWidget(self.delete_last_btn)
+        self.delete_last_btn.setMinimumWidth(120)
+        action_row.addWidget(self.delete_last_btn, 1)
+        meas_layout.addLayout(action_row)
         control_panel.addWidget(meas_group)
 
         # Output Storage
@@ -182,6 +193,16 @@ class MainWindow(QMainWindow):
         self.video_widget.set_measurement_mode(mode)
         self.status_bar.showMessage(f"Measurement mode: {mode_name}", 2000)
 
+    def add_text_annotation(self):
+        if not self.is_frozen:
+            self.status_bar.showMessage("Snap the frame before adding text.", 3000)
+            return
+
+        text, ok = QInputDialog.getText(self, "Add Text", "Annotation:")
+        if ok and text.strip():
+            self.video_widget.begin_text_annotation(text.strip())
+            self.status_bar.showMessage("Click on the frame to place the text.", 2500)
+
     def update_scale(self):
         scale = calculate_scale(
             self.pitch_spin.value(),
@@ -221,6 +242,7 @@ class MainWindow(QMainWindow):
 
             self.video_widget.set_measurement_enabled(True)
             self.is_frozen = True
+            self.add_text_btn.setEnabled(True)
             self.clear_btn.setEnabled(True)
             self.delete_last_btn.setEnabled(True)
             self.radio_dist.setEnabled(True)
@@ -234,6 +256,7 @@ class MainWindow(QMainWindow):
 
             self.video_widget.set_measurement_enabled(False)
             self.is_frozen = False
+            self.add_text_btn.setEnabled(False)
             self.clear_btn.setEnabled(False)
             self.delete_last_btn.setEnabled(False)
             self.radio_dist.setEnabled(False)

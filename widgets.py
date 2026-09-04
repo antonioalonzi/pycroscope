@@ -19,7 +19,9 @@ class VideoWidget(QLabel):
 
         self.current_frame = None
         self.measurements = []
+        self.text_annotations = []
         self.pending_points = []
+        self.pending_text = None
         self.points = []
         self.scale_um_per_px = 1.0
         self.measurement_enabled = False
@@ -35,7 +37,14 @@ class VideoWidget(QLabel):
             return
         self.measurement_mode = mode
         self.pending_points = []
+        self.pending_text = None
         self._sync_points()
+        self.update_display()
+
+    def begin_text_annotation(self, text):
+        if not self.measurement_enabled or not text:
+            return
+        self.pending_text = text
         self.update_display()
 
     def set_frame(self, frame):
@@ -49,6 +58,12 @@ class VideoWidget(QLabel):
         self.points.extend(self.pending_points)
 
     def add_measurement_point(self, point):
+        if self.pending_text is not None:
+            self.text_annotations.append({"text": self.pending_text, "x": point[0], "y": point[1]})
+            self.pending_text = None
+            self.update_display()
+            return
+
         if self.measurement_mode == "distance":
             if len(self.pending_points) >= 1:
                 self.measurements.append({"type": "distance", "points": [self.pending_points[0], point]})
@@ -66,11 +81,27 @@ class VideoWidget(QLabel):
         self._sync_points()
         self.update_display()
 
-    def delete_last_measurement(self):
-        if self.pending_points:
+    def clear_last_edit(self):
+        if self.pending_text is not None:
+            self.pending_text = None
+        elif self.pending_points:
             self.pending_points.pop()
         elif self.measurements:
             self.measurements.pop()
+        elif self.text_annotations:
+            self.text_annotations.pop()
+        self._sync_points()
+        self.update_display()
+
+    def delete_last_measurement(self):
+        if self.pending_text is not None:
+            self.pending_text = None
+        elif self.pending_points:
+            self.pending_points.pop()
+        elif self.measurements:
+            self.measurements.pop()
+        elif self.text_annotations:
+            self.text_annotations.pop()
         self._sync_points()
         self.update_display()
 
@@ -107,31 +138,33 @@ class VideoWidget(QLabel):
 
     def clear_points(self):
         self.measurements.clear()
+        self.text_annotations.clear()
         self.pending_points = []
+        self.pending_text = None
         self._sync_points()
         self.update_display()
 
     def _draw_distance(self, frame, p1, p2, label):
-        cv2.circle(frame, p1, 5, (0, 0, 255), -1)
-        cv2.circle(frame, p2, 5, (0, 0, 255), -1)
-        cv2.line(frame, p1, p2, (0, 255, 0), 2)
+        cv2.circle(frame, p1, 3, (0, 180, 255), -1)
+        cv2.circle(frame, p2, 3, (0, 180, 255), -1)
+        cv2.line(frame, p1, p2, (0, 255, 128), 1)
 
         mid_x = int((p1[0] + p2[0]) / 2)
         mid_y = int((p1[1] + p2[1]) / 2) - 10
         cv2.putText(frame, label, (mid_x, mid_y),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 128), 1)
 
     def _draw_angle(self, frame, p1, p2, p3, label):
-        cv2.circle(frame, p1, 5, (0, 0, 255), -1)
-        cv2.circle(frame, p2, 5, (0, 0, 255), -1)
-        cv2.circle(frame, p3, 5, (0, 0, 255), -1)
-        cv2.line(frame, p2, p1, (0, 255, 0), 2)
-        cv2.line(frame, p2, p3, (0, 255, 0), 2)
+        cv2.circle(frame, p1, 3, (0, 180, 255), -1)
+        cv2.circle(frame, p2, 3, (0, 180, 255), -1)
+        cv2.circle(frame, p3, 3, (0, 180, 255), -1)
+        cv2.line(frame, p2, p1, (0, 255, 128), 1)
+        cv2.line(frame, p2, p3, (0, 255, 128), 1)
 
         label_x = int((p1[0] + p2[0] + p3[0]) / 3)
-        label_y = int((p1[1] + p2[1] + p3[1]) / 3) - 15
+        label_y = int((p1[1] + p2[1] + p3[1]) / 3) - 12
         cv2.putText(frame, label, (label_x, label_y),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 128), 1)
 
     def update_display(self):
         if self.current_frame is None:
@@ -139,9 +172,13 @@ class VideoWidget(QLabel):
 
         frame = self.current_frame.copy()
 
+        if self.pending_text is not None:
+            cv2.putText(frame, f"Text: {self.pending_text}", (12, 26),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1, cv2.LINE_AA)
+
         for point in self.pending_points:
             p = (int(point[0]), int(point[1]))
-            cv2.circle(frame, p, 5, (0, 0, 255), -1)
+            cv2.circle(frame, p, 3, (0, 180, 255), -1)
 
         for measurement in self.measurements:
             points = [(int(pt[0]), int(pt[1])) for pt in measurement["points"]]
@@ -149,7 +186,7 @@ class VideoWidget(QLabel):
                 p1, p2 = points
                 _, label_text = calculate_distance(measurement["points"][0], measurement["points"][1], self.scale_um_per_px)
                 self._draw_distance(frame, p1, p2, label_text)
-             
+
             elif measurement["type"] == "angle":
                 p1, p2, p3 = points
                 v1 = (p1[0] - p2[0], p1[1] - p2[1])
@@ -163,6 +200,10 @@ class VideoWidget(QLabel):
                     angle = math.degrees(math.acos(cos_theta))
                 label_text = f"{angle:.1f}°"
                 self._draw_angle(frame, p1, p2, p3, label_text)
+
+        for annotation in self.text_annotations:
+            cv2.putText(frame, annotation["text"], (int(annotation["x"]), int(annotation["y"])),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 1, cv2.LINE_AA)
 
         pixmap = cv_to_qpixmap(frame)
         self.setPixmap(pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio,
