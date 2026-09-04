@@ -197,6 +197,7 @@ class MainWindow(QMainWindow):
             if self.video_thread is not None:
                 self.video_thread.frame_signal.disconnect(self.video_widget.set_frame)
 
+            self.video_widget.set_measurement_enabled(True)
             self.is_frozen = True
             self.snap_btn.setText("Resume Live View")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px; background-color: #d9534f; color: white;")
@@ -205,6 +206,7 @@ class MainWindow(QMainWindow):
             if self.video_thread is not None:
                 self.video_thread.frame_signal.connect(self.video_widget.set_frame)
 
+            self.video_widget.set_measurement_enabled(False)
             self.is_frozen = False
             self.snap_btn.setText("Snap Frame")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")

@@ -20,6 +20,12 @@ class VideoWidget(QLabel):
         self.pending_point = None
         self.points = []
         self.scale_um_per_px = 1.0
+        self.measurement_enabled = False
+
+    def set_measurement_enabled(self, enabled):
+        self.measurement_enabled = enabled
+        if not enabled:
+            self.clear_points()
 
     def set_frame(self, frame):
         self.current_frame = frame
@@ -60,6 +66,9 @@ class VideoWidget(QLabel):
             self.update_display()
 
     def mousePressEvent(self, event):
+        if not self.measurement_enabled:
+            return
+
         if event.button() == Qt.MouseButton.LeftButton and self.pixmap():
             pm_size = self.pixmap().size()
             lbl_size = self.size()
