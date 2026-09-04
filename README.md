@@ -6,7 +6,7 @@ A lightweight, single-window Linux application for USB microscopy. Built with Py
 
 * **Native V4L2 Streaming:** Zero-latency live feed directly from `/dev/video*` devices.
 * **Hardware-Based Calibration:** Automatically calculates $\mu$m/px scale based on your specific sensor pixel pitch, objective magnification, and C-mount adapter multiplier.
-* **Live Spatial Measurement:** Click any two points on the live stream to instantly calculate real-world physical distance ($\mu$m or mm).
+* **Live Spatial Measurement:** Click two points to measure a distance, or add multiple segments on the same frame and remove a single measurement when needed ($\mu$m or mm).
 * **One-Click Snapshots:** Save uncompressed, timestamped PNG captures to a persistent default directory.
 * **Session Persistence:** Remembers your camera selection, calibration parameters, and save directories across restarts using `QSettings`.
 

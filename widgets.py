@@ -16,12 +16,48 @@ class VideoWidget(QLabel):
         self.setStyleSheet("background-color: #1e1e1e; border: 1px solid #333;")
 
         self.current_frame = None
+        self.measurements = []
+        self.pending_point = None
         self.points = []
         self.scale_um_per_px = 1.0
 
     def set_frame(self, frame):
         self.current_frame = frame
         self.update_display()
+
+    def _sync_points(self):
+        points = []
+        for start, end in self.measurements:
+            points.extend([start, end])
+        if self.pending_point is not None:
+            points.append(self.pending_point)
+        self.points = points
+
+    def add_measurement_point(self, point):
+        if self.pending_point is not None:
+            self.measurements.append((self.pending_point, point))
+            self.pending_point = None
+        else:
+            self.pending_point = point
+        self._sync_points()
+        self.update_display()
+
+    def delete_last_measurement(self):
+        if self.pending_point is not None:
+            self.pending_point = None
+        elif self.measurements:
+            self.measurements.pop()
+        self._sync_points()
+        self.update_display()
+
+    def delete_measurement(self, index=None):
+        if index is None:
+            index = len(self.measurements) - 1
+
+        if 0 <= index < len(self.measurements):
+            self.measurements.pop(index)
+            self._sync_points()
+            self.update_display()
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton and self.pixmap():
@@ -40,15 +76,12 @@ class VideoWidget(QLabel):
                     orig_h, orig_w = self.current_frame.shape[:2]
                     img_x = (click_x / scaled_w) * orig_w
                     img_y = (click_y / scaled_h) * orig_h
-
-                    if len(self.points) >= 2:
-                        self.points.clear()
-
-                    self.points.append((img_x, img_y))
-                    self.update_display()
+                    self.add_measurement_point((img_x, img_y))
 
     def clear_points(self):
-        self.points.clear()
+        self.measurements.clear()
+        self.pending_point = None
+        self._sync_points()
         self.update_display()
 
     def update_display(self):
@@ -57,19 +90,19 @@ class VideoWidget(QLabel):
 
         frame = self.current_frame.copy()
 
-        if len(self.points) == 1:
-            p1 = (int(self.points[0][0]), int(self.points[0][1]))
+        if self.pending_point is not None:
+            p1 = (int(self.pending_point[0]), int(self.pending_point[1]))
             cv2.circle(frame, p1, 5, (0, 0, 255), -1)
 
-        elif len(self.points) == 2:
-            p1 = (int(self.points[0][0]), int(self.points[0][1]))
-            p2 = (int(self.points[1][0]), int(self.points[1][1]))
+        for start, end in self.measurements:
+            p1 = (int(start[0]), int(start[1]))
+            p2 = (int(end[0]), int(end[1]))
 
             cv2.circle(frame, p1, 5, (0, 0, 255), -1)
             cv2.circle(frame, p2, 5, (0, 0, 255), -1)
             cv2.line(frame, p1, p2, (0, 255, 0), 2)
 
-            _, label_text = calculate_distance(self.points[0], self.points[1], self.scale_um_per_px)
+            _, label_text = calculate_distance(start, end, self.scale_um_per_px)
 
             mid_x = int((p1[0] + p2[0]) / 2)
             mid_y = int((p1[1] + p2[1]) / 2) - 10

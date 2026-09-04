@@ -82,9 +82,13 @@ class MainWindow(QMainWindow):
         # Measurement Actions
         meas_group = QGroupBox("Measurement")
         meas_layout = QVBoxLayout(meas_group)
-        self.clear_btn = QPushButton("Clear Measurement Points")
+        self.clear_btn = QPushButton("Clear All Measurements")
         self.clear_btn.clicked.connect(self.video_widget.clear_points)
         meas_layout.addWidget(self.clear_btn)
+
+        self.delete_last_btn = QPushButton("Delete Last Measurement")
+        self.delete_last_btn.clicked.connect(self.video_widget.delete_last_measurement)
+        meas_layout.addWidget(self.delete_last_btn)
         control_panel.addWidget(meas_group)
 
         # Output Storage
