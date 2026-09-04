@@ -38,13 +38,16 @@ class MainWindow(QMainWindow):
         if window_state:
             self.restoreState(window_state)
 
+        # Window Widget
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         main_layout = QHBoxLayout(main_widget)
 
+        # Camera Widget
         self.video_widget = VideoWidget()
         main_layout.addWidget(self.video_widget, stretch=3)
 
+        # Control Panel
         control_panel = QVBoxLayout()
         main_layout.addLayout(control_panel, stretch=1)
 
@@ -198,16 +201,6 @@ class MainWindow(QMainWindow):
         mode = mode_name.lower()
         self.video_widget.set_measurement_mode(mode)
         self.status_bar.showMessage(f"Measurement mode: {mode_name}", 2000)
-
-    def add_text_annotation(self):
-        if not self.is_frozen:
-            self.status_bar.showMessage("Snap the frame before adding text.", 3000)
-            return
-
-        text, ok = QInputDialog.getText(self, "Add Label", "Text:")
-        if ok and text.strip():
-            self.video_widget.begin_text_annotation(text.strip())
-            self.status_bar.showMessage("Click on the frame to place the label.", 2500)
 
     def update_scale(self):
         scale = calculate_scale(
