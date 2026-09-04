@@ -22,7 +22,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Microscope Vision Workbench")
         self.resize(1024, 720)
 
-        self.settings = QSettings("MicroscopeLab", "VisionWorkbench")
+        self.settings = QSettings("aa", "Pycroscope")
         self.video_thread = None
         self.is_frozen = False
 
