@@ -3,7 +3,6 @@ import os
 import sys
 from datetime import datetime
 
-import cv2
 from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QPushButton,
@@ -82,12 +81,21 @@ class MainWindow(QMainWindow):
         # Measurement Actions
         meas_group = QGroupBox("Measurement")
         meas_layout = QVBoxLayout(meas_group)
+
+        self.snap_btn = QPushButton("Snap Frame")
+        self.snap_btn.setFixedHeight(40)
+        self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
+        self.snap_btn.clicked.connect(self.toggle_snap)
+        meas_layout.addWidget(self.snap_btn)
+
         self.clear_btn = QPushButton("Clear All Measurements")
         self.clear_btn.clicked.connect(self.video_widget.clear_points)
+        self.clear_btn.setEnabled(False)
         meas_layout.addWidget(self.clear_btn)
 
         self.delete_last_btn = QPushButton("Delete Last Measurement")
         self.delete_last_btn.clicked.connect(self.video_widget.delete_last_measurement)
+        self.delete_last_btn.setEnabled(False)
         meas_layout.addWidget(self.delete_last_btn)
         control_panel.addWidget(meas_group)
 
@@ -102,13 +110,6 @@ class MainWindow(QMainWindow):
         self.dir_label.setWordWrap(True)
         self.dir_label.setStyleSheet("color: #AAA;")
         cap_layout.addWidget(self.dir_label)
-
-        # Freeze / Unfreeze
-        self.snap_btn = QPushButton("Snap Frame")
-        self.snap_btn.setFixedHeight(40)
-        self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
-        self.snap_btn.clicked.connect(self.toggle_snap)
-        cap_layout.addWidget(self.snap_btn)
 
         # Save Image with Measurement Overlays
         self.save_meas_btn = QPushButton("Save")
@@ -199,6 +200,8 @@ class MainWindow(QMainWindow):
 
             self.video_widget.set_measurement_enabled(True)
             self.is_frozen = True
+            self.clear_btn.setEnabled(True)
+            self.delete_last_btn.setEnabled(True)
             self.snap_btn.setText("Resume Live View")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px; background-color: #d9534f; color: white;")
             self.status_bar.showMessage("Frame frozen", 3000)
@@ -208,6 +211,8 @@ class MainWindow(QMainWindow):
 
             self.video_widget.set_measurement_enabled(False)
             self.is_frozen = False
+            self.clear_btn.setEnabled(False)
+            self.delete_last_btn.setEnabled(False)
             self.snap_btn.setText("Snap Frame")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
             self.status_bar.showMessage("Resumed live feed", 3000)
