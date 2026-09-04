@@ -95,20 +95,19 @@ class MainWindow(QMainWindow):
         self.radio_dist.setEnabled(False)
         self.radio_angle = QRadioButton("Angle")
         self.radio_angle.setEnabled(False)
+        self.radio_text = QRadioButton("Text")
+        self.radio_text.setEnabled(False)
         self.radio_dist.setChecked(True)
         self.meas_button_group.addButton(self.radio_dist)
         self.meas_button_group.addButton(self.radio_angle)
+        self.meas_button_group.addButton(self.radio_text)
         mode_layout.addWidget(self.radio_dist)
         mode_layout.addWidget(self.radio_angle)
+        mode_layout.addWidget(self.radio_text)
         meas_layout.addLayout(mode_layout)
         self.meas_button_group.buttonClicked.connect(
             lambda btn: self.change_measurement_mode(btn.text())
         )
-
-        self.add_text_btn = QPushButton("Add Text")
-        self.add_text_btn.clicked.connect(self.add_text_annotation)
-        self.add_text_btn.setEnabled(False)
-        meas_layout.addWidget(self.add_text_btn)
 
         action_row = QHBoxLayout()
         self.clear_btn = QPushButton("Clear All")
@@ -198,10 +197,10 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage("Snap the frame before adding text.", 3000)
             return
 
-        text, ok = QInputDialog.getText(self, "Add Text", "Annotation:")
+        text, ok = QInputDialog.getText(self, "Add Label", "Text:")
         if ok and text.strip():
             self.video_widget.begin_text_annotation(text.strip())
-            self.status_bar.showMessage("Click on the frame to place the text.", 2500)
+            self.status_bar.showMessage("Click on the frame to place the label.", 2500)
 
     def update_scale(self):
         scale = calculate_scale(
@@ -242,11 +241,11 @@ class MainWindow(QMainWindow):
 
             self.video_widget.set_measurement_enabled(True)
             self.is_frozen = True
-            self.add_text_btn.setEnabled(True)
             self.clear_btn.setEnabled(True)
             self.delete_last_btn.setEnabled(True)
             self.radio_dist.setEnabled(True)
             self.radio_angle.setEnabled(True)
+            self.radio_text.setEnabled(True)
             self.snap_btn.setText("Resume Live View")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px; background-color: #d9534f; color: white;")
             self.status_bar.showMessage("Frame frozen", 3000)
@@ -256,11 +255,11 @@ class MainWindow(QMainWindow):
 
             self.video_widget.set_measurement_enabled(False)
             self.is_frozen = False
-            self.add_text_btn.setEnabled(False)
             self.clear_btn.setEnabled(False)
             self.delete_last_btn.setEnabled(False)
             self.radio_dist.setEnabled(False)
             self.radio_angle.setEnabled(False)
+            self.radio_text.setEnabled(False)
             self.snap_btn.setText("Snap Frame")
             self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
             self.status_bar.showMessage("Resumed live feed", 3000)

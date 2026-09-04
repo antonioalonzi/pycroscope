@@ -2,7 +2,7 @@ import math
 
 import cv2
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLabel, QInputDialog
 
 from utils import calculate_distance, cv_to_qpixmap
 
@@ -29,17 +29,22 @@ class VideoWidget(QLabel):
 
     def set_measurement_enabled(self, enabled):
         self.measurement_enabled = enabled
-        if not enabled:
+        if enabled:
+            self.setCursor(Qt.CursorShape.CrossCursor)
+        else:
+            self.unsetCursor()
             self.clear_points()
 
     def set_measurement_mode(self, mode):
-        if mode not in {"distance", "angle"}:
+        if mode not in {"distance", "angle", "text"}:
             return
         self.measurement_mode = mode
         self.pending_points = []
         self.pending_text = None
         self._sync_points()
         self.update_display()
+        if self.measurement_enabled:
+            self.setCursor(Qt.CursorShape.CrossCursor)
 
     def begin_text_annotation(self, text):
         if not self.measurement_enabled or not text:
@@ -134,6 +139,14 @@ class VideoWidget(QLabel):
                     orig_h, orig_w = self.current_frame.shape[:2]
                     img_x = (click_x / scaled_w) * orig_w
                     img_y = (click_y / scaled_h) * orig_h
+
+                    if self.measurement_mode == "text":
+                        label_text, ok = QInputDialog.getText(self, "Add Label", "Text:")
+                        if ok and label_text.strip():
+                            self.text_annotations.append({"text": label_text.strip(), "x": img_x, "y": img_y})
+                            self.update_display()
+                        return
+
                     self.add_measurement_point((img_x, img_y))
 
     def clear_points(self):
