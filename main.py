@@ -3,7 +3,6 @@ import os
 import sys
 from datetime import datetime
 
-from PyQt6.QtCore import QSettings
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QLabel, QPushButton,
     QComboBox, QDoubleSpinBox, QFileDialog, QHBoxLayout,
@@ -12,6 +11,7 @@ from PyQt6.QtWidgets import (
 )
 
 from camera import VideoThread
+from settings import AppSettings
 from utils import calculate_scale
 from widgets import VideoWidget
 
@@ -20,17 +20,24 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Microscope Vision Workbench")
-        self.resize(1024, 720)
 
-        self.settings = QSettings("aa", "Pycroscope")
+        self.settings = AppSettings()
         self.video_thread = None
         self.is_frozen = False
 
         self.init_ui()
-        self.load_settings()
         self.detect_cameras()
 
     def init_ui(self):
+        # window
+        geometry = self.settings.geometry
+        if geometry:
+            self.restoreGeometry(geometry)
+
+        window_state = self.settings.window_state
+        if window_state:
+            self.restoreState(window_state)
+
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
         main_layout = QHBoxLayout(main_widget)
@@ -135,6 +142,7 @@ class MainWindow(QMainWindow):
         self.dir_label = QLabel()
         self.dir_label.setWordWrap(True)
         self.dir_label.setStyleSheet("color: #AAA;")
+        self.dir_label.setText(f"Output Storage: {os.path.basename(os.path.normpath(self.settings.save_dir))}")
         cap_layout.addWidget(self.dir_label)
 
         # Save Image with Measurement Overlays
@@ -160,8 +168,7 @@ class MainWindow(QMainWindow):
         else:
             self.camera_selector.addItem("Default (0)", 0)
 
-        saved_device = self.settings.value("last_device", "")
-        index = self.camera_selector.findData(saved_device)
+        index = self.camera_selector.findData(self.settings.last_device)
         if index != -1:
             self.camera_selector.setCurrentIndex(index)
 
@@ -178,7 +185,7 @@ class MainWindow(QMainWindow):
 
         device = self.camera_selector.currentData()
         if device is not None:
-            self.settings.setValue("last_device", device)
+            self.settings.set_last_device(device)
             self.video_thread = VideoThread(device_path=device)
             self.video_thread.frame_signal.connect(self.video_widget.set_frame)
             self.video_thread.start()
@@ -213,22 +220,11 @@ class MainWindow(QMainWindow):
         self.video_widget.update_display()
 
     def choose_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Select Save Directory", self.save_dir)
+        folder = QFileDialog.getExistingDirectory(self, "Select Save Directory", self.settings.save_dir)
         if folder:
-            self.save_dir = folder
-            folder_name = os.path.basename(os.path.normpath(self.save_dir))
+            folder_name = os.path.basename(os.path.normpath(folder))
             self.dir_label.setText(f"Output Storage: {folder_name}")
-            self.settings.setValue("save_dir", self.save_dir)
-
-    def load_settings(self):
-        default_dir = os.path.expanduser("~/Pictures")
-        self.save_dir = self.settings.value("save_dir", default_dir)
-        folder_name = os.path.basename(os.path.normpath(self.save_dir))
-        self.dir_label.setText(f"Output Storage: {folder_name}")
-
-        geometry = self.settings.value("geometry")
-        if geometry:
-            self.restoreGeometry(geometry)
+            self.settings.set_save_dir(folder)
 
     def toggle_snap(self):
         if not self.is_frozen:
@@ -270,15 +266,16 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage("Error: Failed to capture widget pixmap.", 3000)
             return
 
-        os.makedirs(self.save_dir, exist_ok=True)
+        os.makedirs(self.settings.save_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filepath = os.path.join(self.save_dir, f"microscope_meas_{timestamp}.png")
+        filepath = os.path.join(self.settings.save_dir, f"microscope_meas_{timestamp}.png")
 
         pixmap.save(filepath, "PNG")
         self.status_bar.showMessage(f"Saved annotated image: {filepath}", 5000)
 
     def closeEvent(self, event):
-        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.set_geometry(self.saveGeometry())
+        self.settings.set_window_state( self.saveState())
 
         if self.video_thread is not None:
             self.video_thread.stop()
