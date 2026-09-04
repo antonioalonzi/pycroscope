@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "microscope-workbench"
+version = "0.1.0"
+description = "Single-window PyQt6 & OpenCV Linux application for USB microscopy streaming, calibration, and spatial measurement."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["microscopy", "opencv", "pyqt6", "v4l2", "measurement"]
+
+authors = [
+  { name = "Antonio Alonzi" }
+]
+
+dependencies = [
+    "PyQt6>=6.4.0",
+    "opencv-python>=4.7.0",
+    "numpy>=1.23.0",
+]
+
+[project.scripts]
+microscope-workbench = "microscope_workbench.app:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
