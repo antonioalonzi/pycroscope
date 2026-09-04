@@ -187,7 +187,6 @@ class MainWindow(QMainWindow):
 
         self.is_frozen = False
         self.snap_btn.setText("Snap Frame")
-        self.snap_btn.setStyleSheet("font-weight: bold; font-size: 14px;")
 
         device = self.camera_selector.currentData()
         if device is not None:
