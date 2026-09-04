@@ -95,7 +95,7 @@ class MainWindow(QMainWindow):
 
         self.dir_label = QLabel()
         self.dir_label.setWordWrap(True)
-        self.dir_label.setStyleSheet("font-size: 10px; color: #555;")
+        self.dir_label.setStyleSheet("color: #AAA;")
         cap_layout.addWidget(self.dir_label)
 
         self.snap_btn = QPushButton("Snap Snapshot")
@@ -167,6 +167,10 @@ class MainWindow(QMainWindow):
         self.save_dir = self.settings.value("save_dir", default_dir)
         self.dir_label.setText(self.save_dir)
 
+        geometry = self.settings.value("geometry")
+        if geometry:
+            self.restoreGeometry(geometry)
+
     def save_snapshot(self):
         if self.video_widget.current_frame is None:
             self.status_bar.showMessage("Error: No frame available to capture.", 3000)
@@ -180,6 +184,8 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage(f"Saved: {filepath}", 5000)
 
     def closeEvent(self, event):
+        self.settings.setValue("geometry", self.saveGeometry())
+
         if self.video_thread is not None:
             self.video_thread.stop()
         event.accept()
