@@ -67,21 +67,21 @@ class MainWindow(QMainWindow):
 
         self.pitch_spin = QDoubleSpinBox()
         self.pitch_spin.setRange(0.01, 100.0)
-        self.pitch_spin.setValue(3.75)
-        self.pitch_spin.setSuffix(" um")
+        self.pitch_spin.setValue(self.settings.pitch_spin)
+        self.pitch_spin.setSuffix(" µm")
         self.pitch_spin.valueChanged.connect(self.update_scale)
         calib_layout.addRow("Sensor Pixel Pitch:", self.pitch_spin)
 
         self.obj_spin = QDoubleSpinBox()
         self.obj_spin.setRange(0.1, 200.0)
-        self.obj_spin.setValue(10.0)
+        self.obj_spin.setValue(self.settings.obj_spin)
         self.obj_spin.setSuffix(" x")
         self.obj_spin.valueChanged.connect(self.update_scale)
         calib_layout.addRow("Objective Mag:", self.obj_spin)
 
         self.cmount_spin = QDoubleSpinBox()
         self.cmount_spin.setRange(0.01, 10.0)
-        self.cmount_spin.setValue(0.5)
+        self.cmount_spin.setValue(self.settings.cmount_spin)
         self.cmount_spin.setSuffix(" x")
         self.cmount_spin.valueChanged.connect(self.update_scale)
         calib_layout.addRow("C-Mount Adapter:", self.cmount_spin)
@@ -205,13 +205,16 @@ class MainWindow(QMainWindow):
         self.status_bar.showMessage(f"Measurement mode: {mode_name}", STATUS_BAR_MESSAGE_DURATION)
 
     def update_scale(self):
+        self.settings.set_pitch_spin(self.pitch_spin.value())
+        self.settings.set_obj_spin(self.obj_spin.value())
+        self.settings.set_cmount_spin(self.cmount_spin.value())
         scale = calculate_scale(
-            self.pitch_spin.value(),
-            self.obj_spin.value(),
-            self.cmount_spin.value()
+            self.settings.pitch_spin,
+            self.settings.obj_spin,
+            self.settings.cmount_spin
         )
         self.video_widget.scale_um_per_px = scale
-        self.scale_label.setText(f"{scale:.4f} um/px")
+        self.scale_label.setText(f"{scale:.4f} µm/px")
         self.video_widget.update_display()
 
     def choose_folder(self):

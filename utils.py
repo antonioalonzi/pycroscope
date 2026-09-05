@@ -18,7 +18,7 @@ def calculate_distance(p1: tuple, p2: tuple, scale_um_px: float) -> tuple[float,
     if real_dist_um >= 1000:
         formatted = f"{real_dist_um / 1000.0:.2f} mm"
     else:
-        formatted = f"{real_dist_um:.2f} um"
+        formatted = f"{real_dist_um:.2f} µm"
 
     return pixel_dist, formatted
 
