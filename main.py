@@ -1,5 +1,7 @@
 import glob
 import os
+import re
+import subprocess
 import sys
 from datetime import datetime
 
@@ -60,6 +62,11 @@ class MainWindow(QMainWindow):
         self.camera_selector = QComboBox()
         self.camera_selector.currentIndexChanged.connect(self.change_camera)
         hw_layout.addRow("Video Device:", self.camera_selector)
+
+        self.resolution_selector = QComboBox()
+        self.resolution_selector.setEnabled(False)
+        self.resolution_selector.currentIndexChanged.connect(self.change_resolution)
+        hw_layout.addRow("Video Resolution:", self.resolution_selector)
         control_panel.addWidget(hw_group)
 
         # Optical Calibration
@@ -212,6 +219,33 @@ class MainWindow(QMainWindow):
 
         form_layout.addRow(label_text, field_widget)
 
+    def get_camera_resolutions(self, device):
+        if not isinstance(device, str):
+            return []
+
+        try:
+            result = subprocess.run(
+                ["v4l2-ctl", "--device", device, "--list-formats-ext"],
+                capture_output=True,
+                text=True,
+                check=False,
+            )
+        except FileNotFoundError:
+            return []
+
+        if result.returncode != 0:
+            return []
+
+        resolutions = set()
+        for line in result.stdout.splitlines():
+            match = re.search(r"(\d+)x(\d+)", line)
+            if match:
+                width = int(match.group(1))
+                height = int(match.group(2))
+                resolutions.add((width, height))
+
+        return sorted(resolutions, key=lambda res: (res[0] * res[1], res[0], res[1]))
+
     def detect_cameras(self):
         self.camera_selector.blockSignals(True)
         self.camera_selector.clear()
@@ -238,14 +272,53 @@ class MainWindow(QMainWindow):
         self.snap_btn.setText("Snap Frame")
 
         device = self.camera_selector.currentData()
-        if device is not None:
-            self.settings.set_last_device(device)
-            self.video_thread = VideoThread(device_path=device)
-            self.video_thread.frame_signal.connect(self.video_widget.set_frame)
-            self.video_thread.start()
-            self.status_bar.showMessage(f"Connected to device: {device}", STATUS_BAR_MESSAGE_DURATION)
+        if device is None:
+            return
+
+        self.settings.set_last_device(device)
+
+        self.resolution_selector.blockSignals(True)
+        self.resolution_selector.clear()
+        self.resolution_selector.setEnabled(False)
+
+        resolutions = self.get_camera_resolutions(device)
+        if resolutions:
+            for width, height in resolutions:
+                self.resolution_selector.addItem(f"{width}x{height}", (width, height))
+
+            preferred_resolution = self.settings.camera_resolution
+            if preferred_resolution is not None:
+                preferred_resolution = tuple(preferred_resolution)
+            if preferred_resolution not in resolutions:
+                preferred_resolution = resolutions[-1]
+
+            target_text = f"{preferred_resolution[0]}x{preferred_resolution[1]}"
+            index = self.resolution_selector.findText(target_text)
+            if index != -1:
+                self.resolution_selector.setCurrentIndex(index)
+            else:
+                self.resolution_selector.setCurrentIndex(0)
+
+            self.settings.set_camera_resolution(tuple(self.resolution_selector.currentData()))
+            self.resolution_selector.setEnabled(True)
+        else:
+            self.settings.set_camera_resolution(None)
+
+        self.resolution_selector.blockSignals(False)
+
+        self.video_thread = VideoThread(device_path=device, resolution=self.settings.camera_resolution)
+        self.video_thread.frame_signal.connect(self.video_widget.set_frame)
+        self.video_thread.start()
+        self.status_bar.showMessage(f"Connected to device: {device}", STATUS_BAR_MESSAGE_DURATION)
 
     def change_camera(self):
+        self.start_camera()
+
+    def change_resolution(self):
+        selected = self.resolution_selector.currentData()
+        if selected is None:
+            return
+        self.settings.set_camera_resolution(tuple(selected))
         self.start_camera()
 
     def change_measurement_mode(self, mode_name):

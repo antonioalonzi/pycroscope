@@ -6,14 +6,21 @@ class VideoThread(QThread):
     """Background thread for non-blocking V4L2 frame acquisition."""
     frame_signal = pyqtSignal(np.ndarray)
 
-    def __init__(self, device_path=0):
+    def __init__(self, device_path=0, resolution=None):
         super().__init__()
         self.device_path = device_path
+        self.resolution = resolution
         self.running = True
 
     def run(self):
         backend = cv2.CAP_V4L2 if isinstance(self.device_path, str) else cv2.CAP_ANY
         cap = cv2.VideoCapture(self.device_path, backend)
+        if not cap.isOpened():
+            return
+
+        if self.resolution is not None:
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, float(self.resolution[0]))
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, float(self.resolution[1]))
 
         while self.running:
             ret, frame = cap.read()

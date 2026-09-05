@@ -5,6 +5,7 @@ class AppSettings:
     def __init__(self, organization="aa", application="Pycroscope"):
         self._settings = QSettings(organization, application)
         self.last_device = self._settings.value("last_device", "")
+        self.camera_resolution = self._settings.value("camera_resolution", None)
         self.save_dir = self._settings.value("save_dir", "~/Pictures")
         self.pitch_spin = self._settings.value("pitch_spin", 3.75, type=float)
         self.obj_spin = self._settings.value("obj_spin", 10.0, type=float)
@@ -15,6 +16,10 @@ class AppSettings:
     def set_last_device(self, last_device):
         self.last_device = last_device
         self._settings.setValue("last_device", last_device)
+
+    def set_camera_resolution(self, camera_resolution):
+        self.camera_resolution = camera_resolution
+        self._settings.setValue("camera_resolution", camera_resolution)
 
     def set_save_dir(self, save_dir):
         self.save_dir = save_dir

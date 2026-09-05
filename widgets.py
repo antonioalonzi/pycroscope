@@ -188,6 +188,15 @@ class VideoWidget(QLabel):
             return
 
         frame = self.current_frame.copy()
+        height, width = frame.shape[:2]
+        resolution_text = f"{width}x{height}"
+        text_size = cv2.getTextSize(resolution_text, cv2.FONT_HERSHEY_SIMPLEX, 0.55, 1)[0]
+        text_x = max(10, width - text_size[0] - 12)
+        text_y = height - 10
+        cv2.rectangle(frame, (text_x - 6, text_y - text_size[1] - 6),
+                      (text_x + text_size[0] + 6, text_y + 4), (0, 0, 0), -1)
+        cv2.putText(frame, resolution_text, (text_x, text_y),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255, 255, 255), 1, cv2.LINE_AA)
 
         if self.pending_text is not None:
             cv2.putText(frame, f"Text: {self.pending_text}", (12, 26),
