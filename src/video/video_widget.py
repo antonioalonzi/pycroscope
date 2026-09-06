@@ -4,7 +4,7 @@ import cv2
 from PyQt6.QtCore import Qt, pyqtSignal, QPointF
 from PyQt6.QtWidgets import QLabel, QInputDialog
 
-from utils import calculate_distance, cv_to_qpixmap
+from src.utils.utils import calculate_distance, cv_to_qpixmap
 
 MEASUREMENT_COLORS_BGR = {
     "Cyan": (255, 180, 0),  # (B, G, R)

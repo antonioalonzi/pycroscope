@@ -12,10 +12,10 @@ from PyQt6.QtWidgets import (
     QVBoxLayout, QFormLayout, QGroupBox, QStatusBar, QButtonGroup, QRadioButton, QSizePolicy
 )
 
-from camera import VideoThread
-from settings import AppSettings
-from utils import calculate_scale
-from widgets import VideoWidget
+from src.video.video_thread import VideoThread
+from src.settings.app_settings import AppSettings
+from src.utils.utils import calculate_scale
+from src.video.video_widget import VideoWidget
 
 
 STATUS_BAR_MESSAGE_DURATION = 3000
