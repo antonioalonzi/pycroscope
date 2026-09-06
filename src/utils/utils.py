@@ -5,7 +5,7 @@ from PyQt6.QtGui import QImage, QPixmap
 
 
 def calculate_scale(pitch_um: float, objective_mag: float, cmount_mag: float) -> float:
-    """Calculates spatial scale in um per pixel."""
+    """Calculates spatial scale in µm per pixel."""
     total_mag = objective_mag * cmount_mag
     return pitch_um / total_mag if total_mag > 0 else 1.0
 
