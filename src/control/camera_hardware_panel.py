@@ -10,7 +10,7 @@ from src.settings.app_settings import AppSettings
 
 
 class CameraHardwarePanel(QWidget):
-    status_bar_emitter = pyqtSignal(str)
+    start_camera_emitter = pyqtSignal(dict)
 
     def __init__(self, control_panel: QVBoxLayout, settings: AppSettings):
         super().__init__()
@@ -92,7 +92,11 @@ class CameraHardwarePanel(QWidget):
         if index != -1:
             self.resolution_selector.setCurrentIndex(index)
 
-        self.status_bar_emitter.emit(f"Selected Camera: {self.camera_selector.currentText()}, resolution: {self.settings.camera_resolution}")
+        self.start_camera_emitter.emit({
+            "device_path": self.camera_selector.currentData(),
+            "device_name": self.camera_selector.currentText(),
+            "resolution": self.settings.camera_resolution
+        })
 
     def change_camera(self):
         self.settings.set_last_device(self.camera_selector.currentData())

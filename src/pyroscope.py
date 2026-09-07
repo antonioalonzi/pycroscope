@@ -21,11 +21,13 @@ class MainWindow(QMainWindow):
         self.settings = AppSettings()
         self.restore_window_size_and_state()
 
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+
         self.control_panel = ControlPanel(self.settings)
         self.video_widget = VideoWidget()
-        self.video_thread = VideoThread(self.settings.last_device, self.settings.camera_resolution)
-        self.video_thread.frame_signal.connect(self.video_widget.set_frame)
-        self.video_thread.start()
+        self.video_thread = None
+        self._start_camera(self.settings.last_device, self.settings.camera_resolution)
 
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
@@ -34,9 +36,7 @@ class MainWindow(QMainWindow):
         main_layout.addWidget(self.video_widget, stretch=3)
         main_layout.addLayout(self.control_panel, stretch=1)
 
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
-        self.control_panel.camera_hardware_panel.status_bar_emitter.connect(self.handle_command)
+        self.control_panel.camera_hardware_panel.start_camera_emitter.connect(self.start_camera)
 
 
     def restore_window_size_and_state(self):
@@ -48,9 +48,18 @@ class MainWindow(QMainWindow):
         if window_state:
             self.restoreState(window_state)
 
+    def start_camera(self, config: dict):
+        self._start_camera(config["device_path"], config["resolution"], config["device_name"])
 
-    def handle_command(self, message: str):
-        self.status_bar.showMessage(message, STATUS_BAR_MESSAGE_DURATION)
+    def _start_camera(self, device_path: str, resolution: str, device_name: str = ''):
+        if self.video_thread is not None:
+            self.video_thread.stop()
+
+        self.status_bar.showMessage(f"Starting {device_name} ({device_path}) at {resolution}...", STATUS_BAR_MESSAGE_DURATION)
+
+        self.video_thread = VideoThread(device_path, resolution)
+        self.video_thread.frame_signal.connect(self.video_widget.set_frame)
+        self.video_thread.start()
 
 
     def closeEvent(self, event):
