@@ -102,6 +102,7 @@ class CameraHardwarePanel(QVBoxLayout):
 
     def change_resolution(self):
         self.settings.set_camera_resolution(tuple(self.resolution_selector.currentData()))
+        self.select_resolution()
         # self.start_camera()
 
     @staticmethod
