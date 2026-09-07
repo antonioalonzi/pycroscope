@@ -34,7 +34,6 @@ class MeasurementPanel(QVBoxLayout):
         for color_name, bgr_tuple in MEASUREMENT_COLORS_BGR.items():
             button = QPushButton()
             button.setFixedSize(22, 22)
-            button.setToolTip(color_name)
             button.setStyleSheet(
                 f"background-color: {bgr_to_rgb_hex(bgr_tuple)}; "
                 "border: 1px solid #444; border-radius: 2px;"
@@ -43,9 +42,10 @@ class MeasurementPanel(QVBoxLayout):
             button.setEnabled(False)
             self.measurement_color_buttons.append(button)
             color_row.addWidget(button)
+        # todo highlight the selected color... needs to be done in a shared method as the same logic will be in change_measurement_color
         # self.selected_color_button = self.measurement_color_buttons[0]
         # self.selected_color_button.setStyleSheet(
-        #     f"background-color: {self.color_name_to_hex('Green')}; "
+        #     f"background-color: #444; "
         #     "border: 2px solid #ffffff; border-radius: 2px;"
         # )
         color_row.addStretch()

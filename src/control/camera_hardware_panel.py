@@ -114,3 +114,19 @@ class CameraHardwarePanel(QVBoxLayout):
                 resolutions.add((width, height))
 
         return sorted(resolutions, key=lambda res: (res[0] * res[1], res[0], res[1]))
+
+    # def start_camera(self):
+    #     if self.video_thread is not None:
+    #         self.video_thread.stop()
+    #
+    #     self.is_frozen = False
+    #     self.snap_btn.setText("Snap Frame")
+    #
+    #     device = self.camera_selector.currentData()
+    #     if device is None:
+    #         return
+    #
+    #     self.video_thread = VideoThread(device_path=device, resolution=self.settings.camera_resolution)
+    #     self.video_thread.frame_signal.connect(self.video_widget.set_frame)
+    #     self.video_thread.start()
+    #     self.status_bar.showMessage(f"Connected to device: {device}", STATUS_BAR_MESSAGE_DURATION)
