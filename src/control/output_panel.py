@@ -1,11 +1,11 @@
 import os
 
-from PyQt6.QtWidgets import QVBoxLayout, QGroupBox, QLabel, QPushButton, QFileDialog
+from PyQt6.QtWidgets import QVBoxLayout, QGroupBox, QLabel, QPushButton, QFileDialog, QWidget
 
 from src.settings.app_settings import AppSettings
 
 
-class OutputPanel(QVBoxLayout):
+class OutputPanel(QWidget):
     def __init__(self, control_panel: QVBoxLayout, settings: AppSettings):
         super().__init__()
 

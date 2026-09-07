@@ -1,14 +1,14 @@
 import os
 
 from PyQt6.QtWidgets import QVBoxLayout, QGroupBox, QLabel, QHBoxLayout, QPushButton, QButtonGroup, QRadioButton, \
-    QFileDialog
+    QFileDialog, QWidget
 
 from src.settings.app_settings import AppSettings
 from utils.utils import bgr_to_rgb_hex
 from video.video_widget import MEASUREMENT_COLORS_BGR
 
 
-class MeasurementPanel(QVBoxLayout):
+class MeasurementPanel(QWidget):
     def __init__(self, control_panel: QVBoxLayout, settings: AppSettings):
         super().__init__()
 
@@ -98,7 +98,7 @@ class MeasurementPanel(QVBoxLayout):
             # dispatch status_bar.showMessage("Frame frozen", STATUS_BAR_MESSAGE_DURATION)
         else:
             self.snap_btn.setText("Snap Frame")
-            # dispatch start video (enable measurements)
+            # dispatch stop video (enable measurements)
             # dispatch self.status_bar.showMessage("Resumed live feed", STATUS_BAR_MESSAGE_DURATION)
 
         self.clear_btn.setEnabled(self.is_frozen)

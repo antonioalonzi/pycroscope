@@ -6,7 +6,7 @@ class VideoThread(QThread):
     """Background thread for non-blocking V4L2 frame acquisition."""
     frame_signal = pyqtSignal(np.ndarray)
 
-    def __init__(self, device_path=0, resolution=None):
+    def __init__(self, device_path, resolution):
         super().__init__()
         self.device_path = device_path
         self.resolution = resolution

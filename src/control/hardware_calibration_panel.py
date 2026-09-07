@@ -6,7 +6,7 @@ from src.settings.app_settings import AppSettings
 from src.utils.utils import calculate_scale
 
 
-class HardwareCalibrationPanel(QVBoxLayout):
+class HardwareCalibrationPanel(QWidget):
     def __init__(self, control_panel: QVBoxLayout, settings: AppSettings):
         super().__init__()
 

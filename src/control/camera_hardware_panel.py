@@ -4,12 +4,12 @@ import re
 import subprocess
 
 from PyQt6.QtCore import pyqtSignal
-from PyQt6.QtWidgets import QVBoxLayout, QGroupBox, QFormLayout, QComboBox
+from PyQt6.QtWidgets import QVBoxLayout, QGroupBox, QFormLayout, QComboBox, QWidget
 
 from src.settings.app_settings import AppSettings
 
 
-class CameraHardwarePanel(QVBoxLayout):
+class CameraHardwarePanel(QWidget):
     status_bar_emitter = pyqtSignal(str)
 
     def __init__(self, control_panel: QVBoxLayout, settings: AppSettings):
@@ -138,7 +138,7 @@ class CameraHardwarePanel(QVBoxLayout):
     #         self.video_thread.stop()
     #
     #     self.is_frozen = False
-    #     self.snap_btn.setText("Snap Frame")
+    #     self.snap_btn.sset_frameetText("Snap Frame")
     #
     #     device = self.camera_selector.currentData()
     #     if device is None:

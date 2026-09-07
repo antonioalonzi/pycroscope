@@ -1,11 +1,8 @@
-import os
 import sys
-from datetime import datetime
 
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QLabel, QPushButton,
-    QHBoxLayout,
-    QVBoxLayout, QGroupBox, QStatusBar, QFileDialog
+    QApplication, QMainWindow, QWidget, QHBoxLayout,
+    QStatusBar
 )
 
 from src.control.control_panel import ControlPanel
@@ -24,11 +21,11 @@ class MainWindow(QMainWindow):
         self.settings = AppSettings()
         self.restore_window_size_and_state()
 
-        self.video_thread = None
-        self.is_frozen = False
-
         self.control_panel = ControlPanel(self.settings)
         self.video_widget = VideoWidget()
+        self.video_thread = VideoThread(self.settings.last_device, self.settings.camera_resolution)
+        self.video_thread.frame_signal.connect(self.video_widget.set_frame)
+        self.video_thread.start()
 
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
