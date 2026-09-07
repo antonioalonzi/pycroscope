@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QApplication, QVBoxLayout, QGroupBox, QFormLayout, QComboBox
 
+from control.measurement_panel import MeasurementPanel
 from src.control.camera_hardware_panel import CameraHardwarePanel
 from src.control.hardware_calibration_panel import HardwareCalibrationPanel
 from src.settings.app_settings import AppSettings
@@ -11,4 +12,5 @@ class ControlPanel(QVBoxLayout):
 
         self.camera_hardware_panel = CameraHardwarePanel(self, settings)
         self.hardware_calibration_panel = HardwareCalibrationPanel(self, settings)
+        self.measurement_panel = MeasurementPanel(self, settings)
         self.addStretch()

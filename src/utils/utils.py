@@ -29,3 +29,9 @@ def cv_to_qpixmap(frame) -> QPixmap:
     h, w, ch = rgb_frame.shape
     qt_img = QImage(rgb_frame.data, w, h, ch * w, QImage.Format.Format_RGB888)
     return QPixmap.fromImage(qt_img)
+
+
+def bgr_to_rgb_hex(bgr: tuple[int, int, int]) -> str:
+    """Converts a BGR tuple (B, G, R) to an RGB hex string '#RRGGBB'."""
+    b, g, r = bgr
+    return f"#{r:02x}{g:02x}{b:02x}"

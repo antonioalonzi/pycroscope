@@ -7,12 +7,12 @@ from PyQt6.QtWidgets import QLabel, QInputDialog
 from src.utils.utils import calculate_distance, cv_to_qpixmap
 
 MEASUREMENT_COLORS_BGR = {
-    "Cyan": (255, 180, 0),  # (B, G, R)
     "Green": (128, 255, 0),
+    "Red": (60, 60, 255),
+    "Cyan": (255, 180, 0),
     "Yellow": (0, 214, 255),
     "Magenta": (204, 0, 255),
     "Orange": (0, 140, 255),
-    "Red": (60, 60, 255),
 }
 
 
