@@ -1,13 +1,17 @@
 import glob
+import os
 import re
 import subprocess
 
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QVBoxLayout, QGroupBox, QFormLayout, QComboBox
 
 from src.settings.app_settings import AppSettings
 
 
 class CameraHardwarePanel(QVBoxLayout):
+    status_bar_emitter = pyqtSignal(str)
+
     def __init__(self, control_panel: QVBoxLayout, settings: AppSettings):
         super().__init__()
 
@@ -36,7 +40,19 @@ class CameraHardwarePanel(QVBoxLayout):
         devices = sorted(glob.glob("/dev/video*"))
         if devices:
             for dev in devices:
-                self.camera_selector.addItem(dev, dev)
+                dev_name = os.path.basename(dev)
+                sys_path = f"/sys/class/video4linux/{dev_name}/name"
+
+                camera_name = dev
+                if os.path.exists(sys_path):
+                    try:
+                        with open(sys_path, "r") as f:
+                            camera_name = f.read().strip()
+                    except IOError:
+                        pass
+
+                display_label = f"{camera_name} ({dev})"
+                self.camera_selector.addItem(display_label, dev)
 
         self.select_camera(self.settings.last_device)
 
@@ -72,10 +88,11 @@ class CameraHardwarePanel(QVBoxLayout):
             for i in range(self.resolution_selector.count())
         ]
 
-        if self.settings.camera_resolution in resolutions:
-            self.resolution_selector.setCurrentIndex(resolutions.index(self.settings.camera_resolution))
-        else:
-            self.resolution_selector.setCurrentIndex(0)
+        index = resolutions.index(self.settings.camera_resolution)
+        if index != -1:
+            self.resolution_selector.setCurrentIndex(index)
+
+        self.status_bar_emitter.emit(f"Selected Camera: {self.camera_selector.currentText()}, resolution: {self.settings.camera_resolution}")
 
     def change_camera(self):
         self.settings.set_last_device(self.camera_selector.currentData())

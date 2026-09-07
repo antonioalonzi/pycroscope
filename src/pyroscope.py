@@ -22,12 +22,27 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Pycroscope")
 
         self.settings = AppSettings()
+        self.restore_window_size_and_state()
+
         self.video_thread = None
         self.is_frozen = False
 
         self.control_panel = ControlPanel(self.settings)
+        self.video_widget = VideoWidget()
 
-        # Window size/state restore
+        main_widget = QWidget()
+        self.setCentralWidget(main_widget)
+
+        main_layout = QHBoxLayout(main_widget)
+        main_layout.addWidget(self.video_widget, stretch=3)
+        main_layout.addLayout(self.control_panel, stretch=1)
+
+        self.status_bar = QStatusBar()
+        self.setStatusBar(self.status_bar)
+        self.control_panel.camera_hardware_panel.status_bar_emitter.connect(self.handle_command)
+
+
+    def restore_window_size_and_state(self):
         geometry = self.settings.geometry
         if geometry:
             self.restoreGeometry(geometry)
@@ -36,20 +51,10 @@ class MainWindow(QMainWindow):
         if window_state:
             self.restoreState(window_state)
 
-        # Window Widget
-        main_widget = QWidget()
-        self.setCentralWidget(main_widget)
-        main_layout = QHBoxLayout(main_widget)
 
-        # Camera Widget
-        self.video_widget = VideoWidget()
-        main_layout.addWidget(self.video_widget, stretch=3)
+    def handle_command(self, message: str):
+        self.status_bar.showMessage(message, STATUS_BAR_MESSAGE_DURATION)
 
-        # Control Panel
-        main_layout.addLayout(self.control_panel, stretch=1)
-
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
 
     def closeEvent(self, event):
         self.settings.set_geometry(self.saveGeometry())
