@@ -10,6 +10,7 @@ class VideoThread(QThread):
         super().__init__()
         self.device_path = device_path
         self.resolution = resolution
+        self.frozen = False
         self.running = True
 
     def run(self):
@@ -24,11 +25,14 @@ class VideoThread(QThread):
 
         while self.running:
             ret, frame = cap.read()
-            if ret:
+            if ret and not self.frozen:
                 self.frame_signal.emit(frame)
             else:
                 self.msleep(30)
         cap.release()
+
+    def toggle_freeze(self, freeze: bool):
+        self.frozen = freeze
 
     def stop(self):
         self.running = False

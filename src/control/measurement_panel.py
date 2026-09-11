@@ -1,7 +1,6 @@
-import os
-
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QVBoxLayout, QGroupBox, QLabel, QHBoxLayout, QPushButton, QButtonGroup, QRadioButton, \
-    QFileDialog, QWidget
+    QWidget
 
 from src.settings.app_settings import AppSettings
 from utils.utils import bgr_to_rgb_hex
@@ -9,6 +8,8 @@ from video.video_widget import MEASUREMENT_COLORS_BGR
 
 
 class MeasurementPanel(QWidget):
+    freeze_signal = pyqtSignal(bool)
+
     def __init__(self, control_panel: QVBoxLayout, settings: AppSettings):
         super().__init__()
 
@@ -91,6 +92,7 @@ class MeasurementPanel(QWidget):
 
     def toggle_snap(self):
         self.is_frozen = not self.is_frozen
+        self.freeze_signal.emit(self.is_frozen)
 
         if self.is_frozen:
             self.snap_btn.setText("Resume Live View")

@@ -64,6 +64,7 @@ class MainWindow(QMainWindow):
 
         self.video_thread = VideoThread(device_path, resolution)
         self.video_thread.frame_signal.connect(self.video_widget.set_frame)
+        self.control_panel.measurement_panel.freeze_signal.connect(self.video_thread.toggle_freeze)
         self.video_thread.start()
 
 
