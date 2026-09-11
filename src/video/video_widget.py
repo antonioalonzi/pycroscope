@@ -268,5 +268,6 @@ class VideoWidget(QLabel):
 
         pixmap = cv_to_qpixmap(frame)
         self.setPixmap(pixmap)
+        # todo zoom
         # self.setPixmap(pixmap.scaled(self.size(), Qt.AspectRatioMode.KeepAspectRatio,
         #                              Qt.TransformationMode.SmoothTransformation))

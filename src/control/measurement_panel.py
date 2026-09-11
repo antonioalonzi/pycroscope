@@ -114,7 +114,7 @@ class MeasurementPanel(QWidget):
 
     def change_measurement_color(self, color_name):
         self.measurement_signal.emit({"command": "color", "value": color_name})
-        # self.video_widget.set_measurement_color(color_name)
+        # todo
         # if self.selected_color_button is not None:
         #     self.selected_color_button.setStyleSheet(
         #         f"background-color: {self.color_name_to_hex(self.selected_color_button.toolTip())}; "
@@ -128,7 +128,6 @@ class MeasurementPanel(QWidget):
         #             "border: 2px solid #ffffff; border-radius: 2px;"
         #         )
         #         break
-        # dispatch status_bar.showMessage(f"Measurement color: {color_name}", STATUS_BAR_MESSAGE_DURATION)
 
     def delete_last_measurement(self):
         self.measurement_signal.emit({"command": "delete", "value": "last_measurement"})

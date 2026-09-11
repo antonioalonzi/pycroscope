@@ -102,6 +102,6 @@ class HardwareCalibrationPanel(QWidget):
             self.settings.obj_spin,
             self.settings.cmount_spin
         )
-        # self.video_widget.scale_um_per_px = scale
+        # todo self.video_widget.scale_um_per_px = scale
         self.scale_label.setText(f"{scale:.4f} µm/px")
         # self.video_widget.update_display()

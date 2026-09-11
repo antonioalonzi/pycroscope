@@ -14,5 +14,6 @@ class ControlPanel(QVBoxLayout):
         self.camera_hardware_panel = CameraHardwarePanel(self, settings)
         self.hardware_calibration_panel = HardwareCalibrationPanel(self, settings)
         self.measurement_panel = MeasurementPanel(self, settings)
+        # todo add a display panel to control the zoom (see last line of video_widget)
         self.output_panel = OutputPanel(self, settings)
         self.addStretch()
