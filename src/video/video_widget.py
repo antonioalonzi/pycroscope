@@ -40,18 +40,18 @@ class VideoWidget(QLabel):
         self.measurement_color = MEASUREMENT_COLORS_BGR[self.measurement_color_name]
 
 
-    def set_measurement(self, dict):
-        match dict["command"]:
+    def set_measurement(self, measurement_command):
+        match measurement_command["command"]:
             case "enabled":
-                self.set_measurement_enabled(dict["value"])
+                self.set_measurement_enabled(measurement_command["value"])
             case "color":
-                self.set_measurement_color(dict["value"])
+                self.set_measurement_color(measurement_command["value"])
             case "mode":
-                self.set_measurement_mode(dict["value"])
+                self.set_measurement_mode(measurement_command["value"])
             case "delete":
-                if dict["value"] == "last_measurement":
+                if measurement_command["value"] == "last_measurement":
                     self.delete_last_measurement()
-                elif dict["value"] == "all_measurements":
+                elif measurement_command["value"] == "all_measurements":
                     self.delete_all_measurements()
 
 
