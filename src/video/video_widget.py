@@ -39,11 +39,23 @@ class VideoWidget(QLabel):
         self.measurement_color_name = "Green"
         self.measurement_color = MEASUREMENT_COLORS_BGR[self.measurement_color_name]
 
+
+    def set_measurement(self, dict):
+        match dict["command"]:
+            case "enabled":
+                self.set_measurement_enabled(dict["value"])
+            case "color":
+                self.set_measurement_color(dict["value"])
+            case "mode":
+                self.set_measurement_mode(dict["value"])
+
+
     def set_measurement_color(self, color_name):
         if color_name in MEASUREMENT_COLORS_BGR:
             self.measurement_color_name = color_name
             self.measurement_color = MEASUREMENT_COLORS_BGR[color_name]
             self.update_display()
+
 
     def set_measurement_enabled(self, enabled):
         self.measurement_enabled = enabled
@@ -52,6 +64,7 @@ class VideoWidget(QLabel):
         else:
             self.unsetCursor()
             self.clear_points()
+
 
     def set_measurement_mode(self, mode):
         if mode not in {"distance", "angle", "text"}:
@@ -64,21 +77,25 @@ class VideoWidget(QLabel):
         if self.measurement_enabled:
             self.setCursor(Qt.CursorShape.CrossCursor)
 
+
     def begin_text_annotation(self, text):
         if not self.measurement_enabled or not text:
             return
         self.pending_text = text
         self.update_display()
 
+
     def set_frame(self, frame):
         self.current_frame = frame
         self.update_display()
+
 
     def _sync_points(self):
         self.points = []
         for measurement in self.measurements:
             self.points.extend(measurement["points"])
         self.points.extend(self.pending_points)
+
 
     def add_measurement_point(self, point):
         if self.pending_text is not None:
@@ -104,6 +121,7 @@ class VideoWidget(QLabel):
         self._sync_points()
         self.update_display()
 
+
     def clear_last_edit(self):
         if self.pending_text is not None:
             self.pending_text = None
@@ -115,6 +133,7 @@ class VideoWidget(QLabel):
             self.text_annotations.pop()
         self._sync_points()
         self.update_display()
+
 
     def delete_last_measurement(self):
         if self.pending_text is not None:
@@ -128,6 +147,7 @@ class VideoWidget(QLabel):
         self._sync_points()
         self.update_display()
 
+
     def delete_measurement(self, index=None):
         if index is None:
             index = len(self.measurements) - 1
@@ -136,6 +156,7 @@ class VideoWidget(QLabel):
             self.measurements.pop(index)
             self._sync_points()
             self.update_display()
+
 
     def mousePressEvent(self, event):
         if not self.measurement_enabled:
@@ -167,6 +188,7 @@ class VideoWidget(QLabel):
 
                     self.add_measurement_point((img_x, img_y))
 
+
     def clear_points(self):
         self.measurements.clear()
         self.text_annotations.clear()
@@ -174,6 +196,7 @@ class VideoWidget(QLabel):
         self.pending_text = None
         self._sync_points()
         self.update_display()
+
 
     def _draw_distance(self, frame, p1, p2, label):
         cv2.circle(frame, p1, 3, self.measurement_color, -1)
@@ -184,6 +207,7 @@ class VideoWidget(QLabel):
         mid_y = int((p1[1] + p2[1]) / 2) - 10
         cv2.putText(frame, label, (mid_x, mid_y),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.55, self.measurement_color, 1)
+
 
     def _draw_angle(self, frame, p1, p2, p3, label):
         cv2.circle(frame, p1, 3, self.measurement_color, -1)
@@ -196,6 +220,7 @@ class VideoWidget(QLabel):
         label_y = int((p1[1] + p2[1] + p3[1]) / 3) - 12
         cv2.putText(frame, label, (label_x, label_y),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.55, self.measurement_color, 1)
+
 
     def update_display(self):
         if self.current_frame is None:

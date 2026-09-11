@@ -9,6 +9,7 @@ from video.video_widget import MEASUREMENT_COLORS_BGR
 
 class MeasurementPanel(QWidget):
     freeze_signal = pyqtSignal(bool)
+    measurement_signal = pyqtSignal(dict)
 
     def __init__(self, control_panel: QVBoxLayout, settings: AppSettings):
         super().__init__()
@@ -93,15 +94,12 @@ class MeasurementPanel(QWidget):
     def toggle_snap(self):
         self.is_frozen = not self.is_frozen
         self.freeze_signal.emit(self.is_frozen)
+        self.measurement_signal.emit({"command": "enabled", "value": self.is_frozen})
 
         if self.is_frozen:
             self.snap_btn.setText("Resume Live View")
-            # dispatch start video (disable measurements)
-            # dispatch status_bar.showMessage("Frame frozen", STATUS_BAR_MESSAGE_DURATION)
         else:
             self.snap_btn.setText("Snap Frame")
-            # dispatch stop video (enable measurements)
-            # dispatch self.status_bar.showMessage("Resumed live feed", STATUS_BAR_MESSAGE_DURATION)
 
         self.clear_btn.setEnabled(self.is_frozen)
         self.delete_last_btn.setEnabled(self.is_frozen)
@@ -112,12 +110,12 @@ class MeasurementPanel(QWidget):
             button.setEnabled(self.is_frozen)
 
     def change_measurement_mode(self, mode_name):
-        print(f"change_measurement_mode: {mode_name.lower()}")
+        self.measurement_signal.emit({"command": "mode", "value": mode_name.lower()})
         # self.video_widget.set_measurement_mode(mode)
         # dispatch status_bar.showMessage(f"Measurement mode: {mode_name}", STATUS_BAR_MESSAGE_DURATION)
 
     def change_measurement_color(self, color_name):
-        print(f"change_measurement_color: {color_name}")
+        self.measurement_signal.emit({"command": "color", "value": color_name})
         # self.video_widget.set_measurement_color(color_name)
         # if self.selected_color_button is not None:
         #     self.selected_color_button.setStyleSheet(

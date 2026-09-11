@@ -40,6 +40,7 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(self.control_panel, stretch=1)
 
         self.control_panel.camera_hardware_panel.start_camera_emitter.connect(self.start_camera)
+        self.control_panel.measurement_panel.measurement_signal.connect(self.video_widget.set_measurement)
 
 
     def restore_window_size_and_state(self):
