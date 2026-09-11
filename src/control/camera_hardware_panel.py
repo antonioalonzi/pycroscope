@@ -1,12 +1,9 @@
-import glob
-import os
-import re
-import subprocess
-
 from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QVBoxLayout, QGroupBox, QFormLayout, QComboBox, QWidget
 
 from src.settings.app_settings import AppSettings
+from utils.camera_utils import get_available_cameras, get_preferred_camera, get_camera_resolutions, \
+    get_preferred_resolution
 
 
 class CameraHardwarePanel(QWidget):
@@ -37,24 +34,12 @@ class CameraHardwarePanel(QWidget):
         self.camera_selector.blockSignals(True)
         self.camera_selector.clear()
 
-        devices = sorted(glob.glob("/dev/video*"))
-        if devices:
-            for dev in devices:
-                dev_name = os.path.basename(dev)
-                sys_path = f"/sys/class/video4linux/{dev_name}/name"
+        cameras = get_available_cameras()
+        for camera in cameras:
+            self.camera_selector.addItem(f"{camera['camera_name']} ({camera['dev']})", camera['dev'])
 
-                camera_name = dev
-                if os.path.exists(sys_path):
-                    try:
-                        with open(sys_path, "r") as f:
-                            camera_name = f.read().strip()
-                    except IOError:
-                        pass
-
-                display_label = f"{camera_name} ({dev})"
-                self.camera_selector.addItem(display_label, dev)
-
-        self.select_camera(self.settings.last_device)
+        preferred_camera = get_preferred_camera(self.settings.last_device)
+        self.select_camera(preferred_camera)
 
         self.camera_selector.blockSignals(False)
         self.detect_camera_resolutions()
@@ -72,7 +57,7 @@ class CameraHardwarePanel(QWidget):
         self.resolution_selector.clear()
         self.resolution_selector.setEnabled(False)
 
-        resolutions = self.get_camera_resolutions(self.camera_selector.currentData())
+        resolutions = get_camera_resolutions(self.camera_selector.currentData())
         if resolutions:
             for width, height in resolutions:
                 self.resolution_selector.addItem(f"{width}x{height}", (width, height))
@@ -88,7 +73,8 @@ class CameraHardwarePanel(QWidget):
             for i in range(self.resolution_selector.count())
         ]
 
-        index = resolutions.index(self.settings.camera_resolution)
+        preferred_resolution = get_preferred_resolution(self.settings.last_device, self.settings.camera_resolution)
+        index = resolutions.index(preferred_resolution)
         if index != -1:
             self.resolution_selector.setCurrentIndex(index)
 
@@ -108,34 +94,6 @@ class CameraHardwarePanel(QWidget):
         self.settings.set_camera_resolution(tuple(self.resolution_selector.currentData()))
         self.select_resolution()
         # self.start_camera()
-
-    @staticmethod
-    def get_camera_resolutions(device):
-        if not isinstance(device, str):
-            return []
-
-        try:
-            result = subprocess.run(
-                ["v4l2-ctl", "--device", device, "--list-formats-ext"],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-        except FileNotFoundError:
-            return []
-
-        if result.returncode != 0:
-            return []
-
-        resolutions = set()
-        for line in result.stdout.splitlines():
-            match = re.search(r"(\d+)x(\d+)", line)
-            if match:
-                width = int(match.group(1))
-                height = int(match.group(2))
-                resolutions.add((width, height))
-
-        return sorted(resolutions, key=lambda res: (res[0] * res[1], res[0], res[1]))
 
     # def start_camera(self):
     #     if self.video_thread is not None:

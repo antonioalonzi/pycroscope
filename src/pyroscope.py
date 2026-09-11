@@ -48,14 +48,16 @@ class MainWindow(QMainWindow):
         if window_state:
             self.restoreState(window_state)
 
+
     def start_camera(self, config: dict):
         self._start_camera(config["device_path"], config["resolution"], config["device_name"])
 
-    def _start_camera(self, device_path: str, resolution: str, device_name: str = ''):
+
+    def _start_camera(self, device_path: str, resolution: tuple, device_name: str = ''):
         if self.video_thread is not None:
             self.video_thread.stop()
 
-        self.status_bar.showMessage(f"Starting {device_name} ({device_path}) at {resolution}...", STATUS_BAR_MESSAGE_DURATION)
+        self.status_bar.showMessage(f"Starting {device_name} ({device_path}) at {resolution[0]}x{resolution[1]}...", STATUS_BAR_MESSAGE_DURATION)
 
         self.video_thread = VideoThread(device_path, resolution)
         self.video_thread.frame_signal.connect(self.video_widget.set_frame)
