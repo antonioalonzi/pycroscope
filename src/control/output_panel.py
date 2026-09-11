@@ -1,11 +1,14 @@
 import os
 
+from PyQt6.QtCore import pyqtSignal
 from PyQt6.QtWidgets import QVBoxLayout, QGroupBox, QLabel, QPushButton, QFileDialog, QWidget
 
 from src.settings.app_settings import AppSettings
 
 
 class OutputPanel(QWidget):
+    save_signal = pyqtSignal(str)
+
     def __init__(self, control_panel: QVBoxLayout, settings: AppSettings):
         super().__init__()
 
@@ -39,15 +42,4 @@ class OutputPanel(QWidget):
             self.settings.set_save_dir(folder)
 
     def save_image(self):
-        print("save_image")
-        # pixmap = self.video_widget.grab()
-        # if pixmap.isNull():
-        #     self.status_bar.showMessage("Error: Failed to capture widget pixmap.", STATUS_BAR_MESSAGE_DURATION)
-        #     return
-        #
-        # os.makedirs(self.settings.save_dir, exist_ok=True)
-        # timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        # filepath = os.path.join(self.settings.save_dir, f"microscope_{timestamp}.png")
-        #
-        # pixmap.save(filepath, "PNG")
-        # self.status_bar.showMessage(f"Saved image: {filepath}", STATUS_BAR_MESSAGE_DURATION)
+        self.save_signal.emit(self.settings.save_dir)

@@ -1,4 +1,6 @@
+import os
 import sys
+from datetime import datetime
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout,
@@ -41,6 +43,7 @@ class MainWindow(QMainWindow):
 
         self.control_panel.camera_hardware_panel.start_camera_emitter.connect(self.start_camera)
         self.control_panel.measurement_panel.measurement_signal.connect(self.video_widget.set_measurement)
+        self.control_panel.output_panel.save_signal.connect(self.save_image)
 
 
     def restore_window_size_and_state(self):
@@ -68,6 +71,20 @@ class MainWindow(QMainWindow):
         self.video_thread.frame_signal.connect(self.video_widget.set_frame)
         self.control_panel.measurement_panel.freeze_signal.connect(self.video_thread.toggle_freeze)
         self.video_thread.start()
+
+
+    def save_image(self, folder: str):
+        pixmap = self.video_widget.grab()
+        if pixmap.isNull():
+            self.status_bar.showMessage("Error: Failed to capture widget pixmap.", STATUS_BAR_MESSAGE_DURATION)
+            return
+
+        os.makedirs(folder, exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filepath = os.path.join(folder, f"microscope_{timestamp}.png")
+
+        pixmap.save(filepath, "PNG")
+        self.status_bar.showMessage(f"Saved image: {filepath}", STATUS_BAR_MESSAGE_DURATION)
 
 
     def closeEvent(self, event):
