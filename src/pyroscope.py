@@ -9,6 +9,7 @@ from src.control.control_panel import ControlPanel
 from src.settings.app_settings import AppSettings
 from src.video.video_thread import VideoThread
 from src.video.video_widget import VideoWidget
+from utils.camera_utils import get_preferred_camera, get_preferred_resolution
 
 STATUS_BAR_MESSAGE_DURATION = 3000
 
@@ -27,7 +28,9 @@ class MainWindow(QMainWindow):
         self.control_panel = ControlPanel(self.settings)
         self.video_widget = VideoWidget()
         self.video_thread = None
-        self._start_camera(self.settings.last_device, self.settings.camera_resolution)
+        preferred_camera = get_preferred_camera(self.settings.last_device)
+        preferred_resolution = get_preferred_resolution(preferred_camera['dev'], self.settings.camera_resolution)
+        self._start_camera(preferred_camera['dev'], preferred_resolution, preferred_camera['camera_name'])
 
         main_widget = QWidget()
         self.setCentralWidget(main_widget)

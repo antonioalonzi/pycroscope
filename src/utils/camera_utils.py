@@ -4,7 +4,7 @@ import re
 import subprocess
 
 
-def get_available_cameras():
+def get_available_cameras() -> list[dict]:
     available_cameras = []
 
     devices = sorted(glob.glob("/dev/video*"))
@@ -29,15 +29,15 @@ def get_available_cameras():
 
     return available_cameras
 
-def get_preferred_camera(dev: str | None):
+def get_preferred_camera(dev: str | None) -> dict:
     cameras = get_available_cameras()
     for camera in cameras:
         if camera['dev'] == dev:
-            return dev
+            return camera
 
-    return cameras[0]['dev']
+    return cameras[0]
 
-def get_camera_resolutions(device: str | None):
+def get_camera_resolutions(device: str | None) -> list[tuple]:
     if not isinstance(device, str):
         return []
 
@@ -66,9 +66,9 @@ def get_camera_resolutions(device: str | None):
 
     return sorted(resolutions, key=lambda res: (res[0] * res[1], res[0], res[1]))
 
-def get_preferred_resolution(last_device: str | None, camera_resolution: str | None):
+def get_preferred_resolution(last_device: str | None, camera_resolution: str | None) -> tuple:
     camera = get_preferred_camera(last_device)
-    resolutions = get_camera_resolutions(camera)
+    resolutions = get_camera_resolutions(camera['dev'])
     for resolution in resolutions:
         if resolution == camera_resolution:
             return resolution

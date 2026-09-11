@@ -28,7 +28,6 @@ class CameraHardwarePanel(QWidget):
         control_panel.addWidget(hw_group)
 
         self.detect_cameras()
-        # self.start_camera()
 
     def detect_cameras(self):
         self.camera_selector.blockSignals(True)
@@ -39,7 +38,7 @@ class CameraHardwarePanel(QWidget):
             self.camera_selector.addItem(f"{camera['camera_name']} ({camera['dev']})", camera['dev'])
 
         preferred_camera = get_preferred_camera(self.settings.last_device)
-        self.select_camera(preferred_camera)
+        self.select_camera(preferred_camera['dev'])
 
         self.camera_selector.blockSignals(False)
         self.detect_camera_resolutions()
@@ -88,25 +87,17 @@ class CameraHardwarePanel(QWidget):
         self.settings.set_last_device(self.camera_selector.currentData())
         self.select_camera(self.camera_selector.currentData())
         self.detect_camera_resolutions()
-        # self.start_camera()
+        self.start_camera_emitter.emit({
+            "device_path": self.camera_selector.currentData(),
+            "device_name": self.camera_selector.currentText(),
+            "resolution": self.settings.camera_resolution
+        })
 
     def change_resolution(self):
         self.settings.set_camera_resolution(tuple(self.resolution_selector.currentData()))
         self.select_resolution()
-        # self.start_camera()
-
-    # def start_camera(self):
-    #     if self.video_thread is not None:
-    #         self.video_thread.stop()
-    #
-    #     self.is_frozen = False
-    #     self.snap_btn.sset_frameetText("Snap Frame")
-    #
-    #     device = self.camera_selector.currentData()
-    #     if device is None:
-    #         return
-    #
-    #     self.video_thread = VideoThread(device_path=device, resolution=self.settings.camera_resolution)
-    #     self.video_thread.frame_signal.connect(self.video_widget.set_frame)
-    #     self.video_thread.start()
-    #     self.status_bar.showMessage(f"Connected to device: {device}", STATUS_BAR_MESSAGE_DURATION)
+        self.start_camera_emitter.emit({
+            "device_path": self.camera_selector.currentData(),
+            "device_name": self.camera_selector.currentText(),
+            "resolution": self.settings.camera_resolution
+        })
