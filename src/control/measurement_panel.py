@@ -75,7 +75,7 @@ class MeasurementPanel(QWidget):
 
         action_row = QHBoxLayout()
         self.delete_last_btn = QPushButton("Clear Last")
-        # self.delete_last_btn.clicked.connect(self.video_widget.clear_last_edit)
+        self.delete_last_btn.clicked.connect(self.delete_last_measurement)
         self.delete_last_btn.setEnabled(False)
         self.delete_last_btn.setMinimumWidth(120)
         action_row.addWidget(self.delete_last_btn, 1)
@@ -83,7 +83,7 @@ class MeasurementPanel(QWidget):
         action_row.addSpacing(8)
 
         self.clear_btn = QPushButton("Clear All")
-        # self.clear_btn.clicked.connect(self.video_widget.clear_points)
+        self.clear_btn.clicked.connect(self.delete_all_measurement)
         self.clear_btn.setEnabled(False)
         self.clear_btn.setMinimumWidth(120)
         action_row.addWidget(self.clear_btn, 1)
@@ -111,8 +111,6 @@ class MeasurementPanel(QWidget):
 
     def change_measurement_mode(self, mode_name):
         self.measurement_signal.emit({"command": "mode", "value": mode_name.lower()})
-        # self.video_widget.set_measurement_mode(mode)
-        # dispatch status_bar.showMessage(f"Measurement mode: {mode_name}", STATUS_BAR_MESSAGE_DURATION)
 
     def change_measurement_color(self, color_name):
         self.measurement_signal.emit({"command": "color", "value": color_name})
@@ -131,3 +129,9 @@ class MeasurementPanel(QWidget):
         #         )
         #         break
         # dispatch status_bar.showMessage(f"Measurement color: {color_name}", STATUS_BAR_MESSAGE_DURATION)
+
+    def delete_last_measurement(self):
+        self.measurement_signal.emit({"command": "delete", "value": "last_measurement"})
+
+    def delete_all_measurement(self):
+        self.measurement_signal.emit({"command": "delete", "value": "all_measurements"})

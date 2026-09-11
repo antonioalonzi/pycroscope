@@ -55,6 +55,7 @@ class MainWindow(QMainWindow):
 
     def start_camera(self, config: dict):
         self._start_camera(config["device_path"], config["resolution"], config["device_name"])
+        self.status_bar.showMessage(f"Starting {config["device_name"]} ({config["device_path"]}) at {config["resolution"][0]}x{config["resolution"][1]}...", STATUS_BAR_MESSAGE_DURATION)
 
 
     def _start_camera(self, device_path: str, resolution: tuple, device_name: str = ''):

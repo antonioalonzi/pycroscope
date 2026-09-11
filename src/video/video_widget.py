@@ -48,6 +48,11 @@ class VideoWidget(QLabel):
                 self.set_measurement_color(dict["value"])
             case "mode":
                 self.set_measurement_mode(dict["value"])
+            case "delete":
+                if dict["value"] == "last_measurement":
+                    self.delete_last_measurement()
+                elif dict["value"] == "all_measurements":
+                    self.delete_all_measurements()
 
 
     def set_measurement_color(self, color_name):
@@ -63,7 +68,7 @@ class VideoWidget(QLabel):
             self.setCursor(Qt.CursorShape.CrossCursor)
         else:
             self.unsetCursor()
-            self.clear_points()
+            self.delete_all_measurements()
 
 
     def set_measurement_mode(self, mode):
@@ -189,7 +194,7 @@ class VideoWidget(QLabel):
                     self.add_measurement_point((img_x, img_y))
 
 
-    def clear_points(self):
+    def delete_all_measurements(self):
         self.measurements.clear()
         self.text_annotations.clear()
         self.pending_points = []
